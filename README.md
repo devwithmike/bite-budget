@@ -4,9 +4,12 @@ A simple and modern budget tracking application built with React, TypeScript, an
 
 ## ✨ Features
 
-- 📊 Basic budget tracking and management
+- 📊 Budget tracking with category support
+- 🏪 Track shop names for each transaction
 - 💾 Local data persistence with Dexie
+- 📥 Export transactions to CSV (organized by month)
 - 🎨 Beautiful UI with Tailwind CSS and Radix UI components
+- 🌓 Automatic dark mode based on system preference
 - ⚡ Lightning-fast development with Vite
 - 📱 Responsive design for all devices
 - 🔍 Type-safe with TypeScript
