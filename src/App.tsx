@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, Settings2, Trash2, Wallet } from "lucide-react";
+import { PlusCircle, Settings2, Trash2, Wallet, Download } from "lucide-react";
 
 const CATEGORIES = ['Groceries', 'Takeout', 'Snacks'];
 
@@ -77,6 +77,39 @@ export default function App() {
       await db.settings.clear();
       window.location.reload();
     }
+  };
+
+  const exportToCSV = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const filename = `${year}-${month}.csv`;
+
+    const headers = ['Date', 'Shop', 'Item', 'Amount', 'Category'];
+    const rows = transactions.map(item => [
+      new Date(item.date).toLocaleDateString('en-US'),
+      item.shopName || '',
+      item.name,
+      item.amount.toFixed(2),
+      item.category
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -184,6 +217,10 @@ export default function App() {
               <Settings2 className="w-4 h-4 mr-2" /> Adjust Budget
             </Button>
           )}
+
+          <Button variant="ghost" size="sm" onClick={exportToCSV} className="text-muted-foreground">
+            <Download className="w-4 h-4 mr-2" /> Export CSV
+          </Button>
 
           <Button variant="link" onClick={clearData} className="text-destructive/50 text-xs hover:text-destructive">
             <Trash2 className="w-3 h-3 mr-2" /> Reset Everything
