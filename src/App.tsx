@@ -16,6 +16,7 @@ const CATEGORIES = ['Groceries', 'Takeout', 'Snacks'];
 export default function App() {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
+  const [shopName, setShopName] = useState('');
   const [category, setCategory] = useState('Groceries');
   const [showSettings, setShowSettings] = useState(false);
   const [tempBudget, setTempBudget] = useState('');
@@ -56,12 +57,13 @@ export default function App() {
     e.preventDefault();
     if (!name || !amount) return;
     await db.transactions.add({
+      shopName,
       name,
       amount: parseFloat(amount),
       category,
       date: new Date().toISOString()
     });
-    setName(''); setAmount('');
+    setName(''); setAmount(''); setShopName('');
   };
 
   const updateBudget = async () => {
@@ -99,6 +101,13 @@ export default function App() {
           </CardHeader>
           <CardContent>
             <form onSubmit={addTransaction} className="space-y-4">
+              <div className="space-y-1.5">
+                <Input
+                  placeholder="Shop name"
+                  value={shopName}
+                  onChange={(e) => setShopName(e.target.value)}
+                />
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-2 space-y-1.5">
                   <Input
@@ -143,6 +152,7 @@ export default function App() {
                   <div>
                     <p className="font-semibold text-foreground">{item.name}</p>
                     <p className="text-xs text-muted-foreground">
+                      {item.shopName && <span>{item.shopName} • </span>}
                       {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {item.category}
                     </p>
                   </div>
