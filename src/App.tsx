@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { PlusCircle, Settings2, Trash2, Wallet, Download } from "lucide-react";
 
-const CATEGORIES = ['Groceries', 'Takeout', 'Snacks'];
+const CATEGORIES = ['Groceries', 'Takeout', 'Snacks', 'Other'];
 
 export default function App() {
   const [name, setName] = useState('');
