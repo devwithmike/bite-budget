@@ -66,6 +66,42 @@ export default function App() {
     setName(''); setAmount(''); setShopName('');
   };
 
+  const deleteTransaction = async (id) => {
+    if (confirm('Delete this transaction?')) {
+      await db.transactions.delete(id);
+    }
+  };
+
+  // swipe / long-press helpers
+  const [activeSwipeId, setActiveSwipeId] = useState(null);
+  const touchStartX = React.useRef(null);
+  const longPressTimer = React.useRef(null);
+
+  const handlePointerDown = (e, id) => {
+    e.stopPropagation(); // prevent global listener from firing
+    // used for both mouse and touch
+    touchStartX.current = e.clientX;
+    // start long-press timer
+    longPressTimer.current = setTimeout(() => {
+      setActiveSwipeId(id);
+    }, 500);
+  };
+
+  const handlePointerMove = (e, id) => {
+    if (touchStartX.current === null) return;
+    const delta = touchStartX.current - e.clientX;
+    if (delta > 75) {
+      // swiped left far enough
+      setActiveSwipeId(id);
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  const handlePointerUp = () => {
+    touchStartX.current = null;
+    clearTimeout(longPressTimer.current);
+  };
+
   const updateBudget = async () => {
     await db.settings.put({ id: 'user_budget', amount: parseFloat(tempBudget) || 0 });
     setShowSettings(false);
@@ -78,6 +114,13 @@ export default function App() {
       window.location.reload();
     }
   };
+
+  // clear active swipe whenever user interacts elsewhere
+  useEffect(() => {
+    const handleClick = () => setActiveSwipeId(null);
+    document.addEventListener('pointerdown', handleClick);
+    return () => document.removeEventListener('pointerdown', handleClick);
+  }, []);
 
   const exportToCSV = () => {
     const now = new Date();
@@ -180,18 +223,36 @@ export default function App() {
           <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">History</h3>
           <div className="space-y-2">
             {transactions.map(item => (
-              <Card key={item.id} className="shadow-none border-zinc-200 dark:border-zinc-700">
-                <CardContent className="p-4 flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold text-foreground">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.shopName && <span>{item.shopName} • </span>}
-                      {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {item.category}
-                    </p>
-                  </div>
-                  <span className="font-mono font-bold text-foreground/70">-R{item.amount.toFixed(2)}</span>
-                </CardContent>
-              </Card>
+              <div key={item.id} className="relative select-none">
+                <Card
+                  className="shadow-none border-zinc-200 dark:border-zinc-700"
+                  onPointerDown={(e) => handlePointerDown(e, item.id)}
+                  onPointerMove={(e) => handlePointerMove(e, item.id)}
+                  onPointerUp={handlePointerUp}
+                  onPointerLeave={handlePointerUp}
+                >
+                  <CardContent className="p-4 flex justify-between items-center">
+                    <div>
+                      <p className="font-semibold text-foreground">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.shopName && <span>{item.shopName} • </span>}
+                        {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {item.category}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-foreground/70">-R{item.amount.toFixed(2)}</span>
+                      {activeSwipeId === item.id && (
+                        <button
+                          className="text-destructive"
+                          onClick={() => deleteTransaction(item.id)}
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
